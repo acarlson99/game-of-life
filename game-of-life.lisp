@@ -36,10 +36,10 @@
 (defun check-cell (arr x y width height)
   (if (or (< x 0) (< y 0) (>= x width) (>= y height))
 	  0
-		(if (= (aref arr (+ (* width y) x)) alive-cell)
-		;; (if (/= (aref arr (+ (* width y) x)) 0)
-			1
-			0)))
+	  (if (= (aref arr (+ (* width y) x)) alive-cell)
+		  ;; (if (/= (aref arr (+ (* width y) x)) 0)
+		  1
+		  0)))
 
 (defun count-neighbors (arr x y width height)
   (+ (check-cell arr (+ x 1) y width height)
@@ -49,19 +49,19 @@
 
 (defun gen-val (arr x y width height)
   (let ((neighbors (count-neighbors arr x y width height))
-  		(val (arr-idx arr x y width height)))
-  	(if (and (/= val alive-cell) (= neighbors 3))
-  		alive-cell
-  		(if (and (= val alive-cell) (or (= neighbors 3) (= neighbors 2)))
-  			alive-cell
-  			dead-cell))))
+		(val (arr-idx arr x y width height)))
+	(if (and (/= val alive-cell) (= neighbors 3))
+		alive-cell
+		(if (and (= val alive-cell) (or (= neighbors 3) (= neighbors 2)))
+			alive-cell
+			dead-cell))))
 
 (defun next-gen (arr width height)
   (let ((new-arr (make-array (* width height) :initial-element dead-cell)))
 	(loop for y from 0 to (- height 1)
 	   do (loop for x from 0 to (- width 1)
 			 do (setf (arr-idx new-arr x y width height) (gen-val arr x y width height))))
-			 ;; do (setf (aref new-arr (+ (* width y) x)) (count-neighbors arr x y width height))))
+	;; do (setf (aref new-arr (+ (* width y) x)) (count-neighbors arr x y width height))))
 	new-arr))
 
 (defun print-gen (generation width height)
@@ -87,18 +87,17 @@
 		(setf height (parse-integer (caddr *posix-argv*) :junk-allowed t))
 		(if (not (and width height))
 			(print "Invalid parameters")
-			(progn
-			  (setf generation (make-array (* width height) :initial-element dead-cell))
+			(let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
+			  (progn
+				(setf (arr-idx (gen-arr generation) 10 10 width height) 1)
+				(setf (arr-idx (gen-arr generation) 11 11 width height) 1)
+				(setf (arr-idx (gen-arr generation) 9 12 width height) 1)
+				(setf (arr-idx (gen-arr generation) 10 12 width height) 1)
+				(setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 
-			  (setf (arr-idx generation 10 10 width height) 1)
-			  (setf (arr-idx generation 11 11 width height) 1)
-			  (setf (arr-idx generation 9 12 width height) 1)
-			  (setf (arr-idx generation 10 12 width height) 1)
-			  (setf (arr-idx generation 11 12 width height) 1)
+				(print-gen (gen-arr generation) width height)
 
-			  (print-gen generation width height)
-
-			  (graphics-init generation width height))))))
+				(graphics-init (gen-arr generation) (gen-width generation) (gen-height generation))))))))
 
 (main)
 
