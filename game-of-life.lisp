@@ -19,6 +19,8 @@
 (defvar *config-view-x*)
 (defvar *config-view-y*)
 
+(defparameter *cell-size* 32)
+
 (defun update-view-size ()
   (setf *config-view-x* (round (/ *config-window-x* *config-view-size*)))
   (setf *config-view-y* (round (/ *config-window-y* *config-view-size*))))
@@ -54,6 +56,9 @@
 
 (defmacro arr-idx (arr x y width height)
   `(aref ,arr (+ (* ,width ,y) ,x)))
+
+(defun arr-idx* (arr x y width height)
+  (aref arr (+ (* width y) x)))
 
 (defun check-cell (arr x y width height)
   (if (or (< x 0) (< y 0) (>= x width) (>= y height))
@@ -118,8 +123,14 @@
                     :height height
                     :arr (make-array (* width height)
                                      :initial-element dead-cell)))
-    (game-run g)
-    )
+	;; TODO: remove
+	(setf (arr-idx (gen-arr (game-state g)) 10 10 width height) 1)
+	(setf (arr-idx (gen-arr (game-state g)) 11 11 width height) 1)
+	(setf (arr-idx (gen-arr (game-state g)) 9 12 width height) 1)
+	(setf (arr-idx (gen-arr (game-state g)) 10 12 width height) 1)
+	(setf (arr-idx (gen-arr (game-state g)) 11 12 width height) 1)
+	(game-run g)
+	)
   )
 
 ;; shut it down
@@ -213,18 +224,29 @@
      ;; if no input
      (:idle ()
       ;; todo
+			(loop for y from 0 to (- height 1)
+			   do (loop for x from 0 to (- width 1)
+					 do (let ((state (game-state g)))
+						  (if (= (arr-idx* (gen-arr state) x y (gen-width state) (gen-height state)) alive-cell)
+							  (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
+											:color sdl:*black*)
+							  (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
+											:color sdl:*green*)))))
+			
       ;; update game at end
-      (print (game-window g))
-      (print (sdl:video-dimensions))
       ; (sdl:clear-display sdl:*green*)
       ; (sleep .5)
       (game-step g (game-state g))
-      (sdl:draw-box (sdl:rectangle :x 0 :y 10 :w 200 :h 10)
-				  :color (sdl:color))
+      ;; (sdl:draw-box (sdl:rectangle :x 0 :y 10 :w 200 :h 10)
+	  ;; 			  :color (sdl:color))
+	  (print-gen (game-state g))
       (sdl:update-display)
       )
      )
   )
+
+(defun scale-xy (x)
+  (* x *cell-size*))
 
 (defun main ()
   (print "start of main")
@@ -239,11 +261,6 @@
                   )
               (game-setup g width height)
               (game-teardown g)
-			  ; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
-			  ; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
-			  ; (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
-			  ; (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
-			  ; (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 11 10 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 10 11 width height) 1)
