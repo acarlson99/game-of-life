@@ -64,16 +64,21 @@
 	;; do (setf (aref new-arr (+ (* width y) x)) (count-neighbors arr x y width height))))
 	new-arr))
 
-(defun print-gen (generation width height)
+(defun print-gen (generation)
   (print "GEN")
-  (loop for y from 0 to (- height 1)
-	 do (print (subseq generation (* y width) (* (+ y 1) width)))))
+  (loop for y from 0 to (- (gen-height generation) 1)
+	 do (print (subseq (gen-arr generation)
+					   (* y (gen-width generation))
+					   (* (+ y 1) (gen-width generation))))))
 
-(defun graphics-init (generation width height)
+(defun graphics-init (generation)
   (loop for i from 0 to 100
 	 do (progn
-		  (setf generation (next-gen generation width height))
-		  (print-gen generation width height))))
+		  (setf (gen-arr generation)
+				(next-gen (gen-arr generation)
+						  (gen-width generation)
+						  (gen-height generation)))
+		  (print-gen generation))))
 
 (defparameter width nil)
 (defparameter height nil)
@@ -95,9 +100,9 @@
 				(setf (arr-idx (gen-arr generation) 10 12 width height) 1)
 				(setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 
-				(print-gen (gen-arr generation) width height)
+				(print-gen generation)
 
-				(graphics-init (gen-arr generation) (gen-width generation) (gen-height generation))))))))
+				(graphics-init generation)))))))
 
 (main)
 
