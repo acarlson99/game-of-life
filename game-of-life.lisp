@@ -213,7 +213,7 @@
      (:idle ()
       ;; todo
       ;; update game at end
-      (sdl:clear-display sdl:*black* (game-window g))
+      (sdl:clear-display sdl:*black* :surface (game-window g))
       (game-step g (game-state g))
       (sdl:update-display))
      )
