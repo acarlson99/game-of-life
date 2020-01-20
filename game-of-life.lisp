@@ -118,6 +118,7 @@
                     :height height
                     :arr (make-array (* width height)
                                      :initial-element dead-cell)))
+    (game-run g)
     )
   )
 
@@ -213,9 +214,15 @@
      (:idle ()
       ;; todo
       ;; update game at end
-      (sdl:clear-display sdl:*black* :surface (game-window g))
+      (print (game-window g))
+      (print (sdl:video-dimensions))
+      ; (sdl:clear-display sdl:*green*)
+      ; (sleep .5)
       (game-step g (game-state g))
-      (sdl:update-display))
+      (sdl:draw-box (sdl:rectangle :x 0 :y 10 :w 200 :h 10)
+				  :color (sdl:color))
+      (sdl:update-display)
+      )
      )
   )
 
@@ -231,7 +238,6 @@
                   ; (generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell)))
                   )
               (game-setup g width height)
-              (game-run g)
               (game-teardown g)
 			  ; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
 			  ; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
