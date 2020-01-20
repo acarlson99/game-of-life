@@ -88,21 +88,23 @@
   (if (/= (length *posix-argv*) 3)
 	  (print "usage: sbcl --script game-of-life.lisp width height")
 	  (progn
-		(setf width (parse-integer (cadr *posix-argv*) :junk-allowed t))
-		(setf height (parse-integer (caddr *posix-argv*) :junk-allowed t))
-		(if (not (and width height))
-			(print "Invalid parameters")
-			(let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
-			  (progn
-				(setf (arr-idx (gen-arr generation) 10 10 width height) 1)
-				(setf (arr-idx (gen-arr generation) 11 11 width height) 1)
-				(setf (arr-idx (gen-arr generation) 9 12 width height) 1)
-				(setf (arr-idx (gen-arr generation) 10 12 width height) 1)
-				(setf (arr-idx (gen-arr generation) 11 12 width height) 1)
+		(let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
+			  (height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
+		  (if (not (and width height))
+			  (print "Invalid parameters")
+			  (let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
+				(progn
+				  (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
+				  (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
+				  (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
+				  (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
+				  (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 
-				(print-gen generation)
+				  (print generation)
 
-				(graphics-init generation)))))))
+				  (print-gen generation)
+
+				  (graphics-init generation))))))))
 
 (main)
 
