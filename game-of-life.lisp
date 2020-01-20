@@ -278,9 +278,13 @@
 (defun mouse-handler (g button x y)
   (let* ((x (truncate (/ x *cell-size*)))
 		 (y (truncate (/ y *cell-size*))))
-	(if (and (not (or (>= x (game-width g)) (>= y (game-height g))))
-			 (eql button 1))
-		(game-toggle-cell g x y))))
+	(case button
+	  (1 (if (not (or (>= x (game-width g)) (>= y (game-height g))))
+			 (game-toggle-cell g x y)))
+	  (4 (when (> *cell-size* 1) ;; minimum of 2x2
+		   (decf *cell-size* 1)))
+	  (5 (when (< *cell-size* (+ *config-window-x* 1))
+          (incf *cell-size* 1))))))
 
 (defun main ()
   (print "start of main")
