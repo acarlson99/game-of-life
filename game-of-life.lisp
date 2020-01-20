@@ -33,6 +33,8 @@
    ;; current view offset
    (vx :accessor game-vx :initform 0)
    (vy :accessor game-vy :initform 0)
+   (width :accessor game-width :initform 32)
+   (height :accessor game-height :initform 32)
    ;; SDL window
    (window :accessor game-window)))
 
@@ -106,6 +108,10 @@
 	  (sdl:window *config-window-x* *config-window-y*
 	    :title-caption "beans lol"))
     ;; set up key repeat so holding down a key works
+    ; (setf *width* width)
+    ; (setf *height* height)
+    (setf (game-width g) width)
+    (setf (game-height g) height)
     (sdl:enable-key-repeat 200 30)
     (setf (sdl:frame-rate) 20)
     (sdl:clear-display (sdl:color :r 127 :g 127 :b 127))
@@ -215,8 +221,10 @@
       (when (sdl:key= key :sdl-key-greater)
         (when (> *config-timestep* 0.0)
           (setf *config-timestep* (/ *config-timestep* *config-timestep-delta*))))
-      ;; TODO mouse input
       )
+     (:mouse-button-down-event (:button button :x x :y y)
+      (mouse-handler g button x y))
+     ;; TODO mouse input
      ;; if no input
      (:idle ()
       ;; todo
@@ -234,8 +242,25 @@
 	 )
   )
 
+(defmethod game-set-cell ((g game) x y value)
+  (setf (arr-idx (gen-arr (game-state g)) x y (game-width g) (game-height g)) value)
+  )
+
+(defmethod game-get-cell ((g game) x y)
+  (arr-idx* (game-state g) x y (game-width g) (game-height g)))
+
 (defun scale-xy (x)
   (* x *cell-size*))
+
+(defun mouse-handler (g button x y)
+  (let* ((y (- *config-window-y* y 1))
+         (x (truncate (/ (- (- x *config-view-size*) (/ *config-window-x* 2)) *config-view-size*)))
+         (y (truncate (/ (- (- y *config-view-size*) (/ *config-window-y* 2)) *config-view-size*))))
+    (cond ((eql button 0)
+           ;(sdl:button= button :sdl-button-left)
+           ; TODO set cell to living
+           (game-set-cell g x y (not (game-get-cell g x y))))
+          )))
 
 (defun main ()
   (print "start of main")
