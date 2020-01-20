@@ -15,17 +15,7 @@
 (defparameter *config-window-x* 512)
 (defparameter *config-window-y* 512)
 
-(defparameter *config-view-size* 16)
-(defvar *config-view-x*)
-(defvar *config-view-y*)
-
 (defparameter *cell-size* 32)
-
-(defun update-view-size ()
-  (setf *config-view-x* (round (/ *config-window-x* *config-view-size*)))
-  (setf *config-view-y* (round (/ *config-window-y* *config-view-size*))))
-
-(update-view-size)
 
 ;; (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
 ;;                                        (user-homedir-pathname))))
@@ -195,16 +185,11 @@
         (incf (game-vy g) *config-view-delta*))
       ;; zoom view area with [+ -] or [MouseWheel]
       (when (sdl:key= key :sdl-key-minus)
-        (when (> *config-view-size* 2) ;; minimum of 2x2
-          (decf *config-view-size* 1)
-          (update-view-size)))
-      (when (sdl:key= key :sdl-key-plus)
-        (when (< *config-view-size* (+ *config-window-x* 1)) ;; TODO: square window only?
-          (incf *config-view-size* 1)
-          (update-view-size)))
+        (when (> *cell-size* 2) ;; minimum of 2x2
+          (decf *cell-size* 1)))
       (when (sdl:key= key :sdl-key-equals)
-        (setf *config-view-size* 16)
-        (update-view-size))
+        (when (< *cell-size* (+ *config-window-x* 1)) ;; TODO: square window only?
+          (incf *cell-size* 1)))
       ;; reset game state and pause with [R]
       (when (sdl:key= key :sdl-key-r)
         (game-reset g)
