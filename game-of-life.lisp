@@ -15,13 +15,14 @@
 (defparameter *config-window-x* 512)
 (defparameter *config-window-y* 512)
 
+(defparameter *config-view-size* 16)
+(defvar *config-view-x*)
+(defvar *config-view-y*)
+
 (defun update-view-size ()
   (setf *config-view-x* (round (/ *config-window-x* *config-view-size*)))
   (setf *config-view-y* (round (/ *config-window-y* *config-view-size*))))
 
-(defparameter *config-view-size* 16)
-(defvar *config-view-x*)
-(defvar *config-view-y*)
 (update-view-size)
 
 ;; (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
@@ -31,22 +32,17 @@
 
 ;; (ql:quickload :lispbuilder-sdl)
 
-;; (defun width-height ()
-;;   (let ((width 200) (height 200))
-;;     (sdl:with-init ()
-;;       (sdl:window width height :title-caption "Width and Height, from Processing.org")
-;;       (setf (sdl:frame-rate) 5)
-;;       (sdl:clear-display (sdl:color :r 127 :g 127 :b 127))
 
-;;       (loop for i from 0 to height by 20
-;; 	 do (progn (sdl:draw-box (sdl:rectangle :x 0 :y i :w 200 :h 10)
-;; 				  :color (sdl:color))
-;; 		   (sdl:draw-box (sdl:rectangle :x i :y 0 :w 10 :h 200)
-;; 				  :color (sdl:color :r 255 :g 255 :b 255))))
-;;       (sdl:update-display)
-;;       (sdl:with-events ()
-;; 	(:quit-event () t)
-;; 	(:video-expose-event () (sdl:update-display))))))
+(defclass game ()
+  ((paused :accessor game-paused :initform t)
+   ;; current gen of life
+   (state :accessor game-state :initform nil)
+   (next :accessor game-next :initform nil)
+   ;; current view offset
+   (vx :accessor game-vx :initform 0)
+   (vy :accessor game-vy :initform 0)
+   ;; SDL window
+   (window :accessor game-window)))
 
 (defstruct gen
   width
@@ -108,6 +104,30 @@
 					   (* y (gen-width generation))
 					   (* (+ y 1) (gen-width generation))))))
 
+(defmethod game-setup ((g game) width height)
+  (sdl:with-init ()
+    (setf (game-window g)
+	  (sdl:window *config-window-x* *config-window-y*
+	    :title-caption "beans lol"))
+    ;; set up key repeat so holding down a key works
+    (sdl:enable-key-repeat 200 30)
+    (setf (sdl:frame-rate) 20)
+    (sdl:clear-display (sdl:color :r 127 :g 127 :b 127))
+    (setf (game-state g)
+          (make-gen :width width
+                    :height height
+                    :arr (make-array (* width height)
+                                     :initial-element dead-cell)))
+    )
+  )
+
+;; shut it down
+(defmethod game-teardown ((g game))
+  (sdl:quit-sdl))
+
+(defmethod game-toggle-paused ((g game))
+  (setf (game-paused g) (not (game-paused g))))
+
 (defun graphics-init (generation)
   (loop for i from 0 to 100
 	 do (progn
@@ -119,123 +139,120 @@
 
 (defparameter width nil)
 (defparameter height nil)
-(defparameter generation nil)
+; (defparameter generation nil)
 
-(defclass game ()
-  ((paused :accessor game-paused :initform t)
-   ;; current gen of life
-   (state :accessor game-state :initform nil)
-   ;; current view offset
-   (vx :accessor game-vx :initform 0)
-   (vy :accessor game-vy :initform 0)
-   ;; SDL window
-   (window :accessor game-window)))
+(defmethod game-step ((g game) generation)
+  (setf (gen-arr generation)
+        (next-gen (gen-arr generation)
+                  (gen-width generation)
+                  (gen-height generation)))
+  ;TODO
+  )
 
-(defmethod game-toggle-paused ((g game))
-  (setf (game-paused g) (not (game-paused g))))
+(defmethod game-draw ((g game))
+  (print-gen (game-state g))
+  ; TODO
+  )
 
-(defmethod game-step ((g game))
-  (format "TODO~%"))
-
+;; set all cells of game-state to deat-cell
 (defmethod game-reset ((g game))
-  (format "TODO~%"))
+  ; TODO
+  )
 
 (defmethod game-run ((g game))
   "Game-Of-Life docstring."
-  (sdl:with-init ()
-    ;; set up key repeat so holding down a key works
-    (sdl:enable-key-repeat 200 30)
-    (sdl:window width height :title-caption "Common Lisp Life")
-    (setf (sdl:frame-rate) 60)
-    (sdl:clear-display (sdl:color :r 127 :g 127 :b 127))
-
-    (loop for i from 0 to height by 20
-          do (progn (sdl:draw-box (sdl:rectangle :x 0 :y i :w width :h 10)
-                                  :color (sdl:color))
-                    (sdl:draw-box (sdl:rectangle :x i :y 0 :w 10 :h height)
-                                  :color (sdl:color :r 255 :g 255 :b 255))))
-    (sdl:update-display)
-    (sdl:with-events (:poll)
-      (:quit-event () t)
-      (:video-expose-event () (sdl:update-display))
-      ;; process keyboard input
-      ;; make living cell with [MouseLeftClick]
-      (:key-down-event (:key key)
-       ;; close window with [RedX] or [ESC]
-       (when (sdl:key= key :sdl-key-escape)
-         (sdl:push-quit-event))
-       ;; move view area with [W A S D] or [MouseDrag]
-       (when (or (sdl:key= key :sdl-key-a) (sdl:key= key :sdl-key-left))
-         (incf (game-vx g) *config-view-delta*))
-       (when (or (sdl:key= key :sdl-key-d) (sdl:key= key :sdl-key-right))
-         (decf (game-vx g) *config-view-delta*))
-       (when (or (sdl:key= key :sdl-key-w) (sdl:key= key :sdl-key-up))
-         (decf (game-vy g) *config-view-delta*))
-       (when (or (sdl:key= key :sdl-key-s) (sdl:key= key :sdl-key-down))
-         (incf (game-vy g) *config-view-delta*))
-       ;; zoom view area with [+ -] or [MouseWheel]
-       (when (sdl:key= key :sdl-key-minus)
-         (when (> *config-view-size* 2) ;; minimum of 2x2
-           (decf *config-view-size* 1)
-           (update-view-size)))
-       (when (sdl:key= key :sdl-key-plus)
-         (when (< *config-view-size* (+ *config-window-x* 1)) ;; TODO: square window only?
-           (incf *config-view-size* 1)
-           (update-view-size)))
-       (when (sdl:key= key :sdl-key-equals)
-         (setf *config-view-size* 16)
-         (update-view-size))
-       ;; reset game state and pause with [R]
-       (when (sdl:key= key :sdl-key-r)
-         (game-reset g)
-         (setf (game-paused g) t))
-       ;; toggle pause sim with [P]
-       (when (sdl:key= key :sdl-key-p)
-         (game-toggle-paused g))
-       ;; adjust timestep with [< >] or [MouseWheel+SHIFT]
-       (when (sdl:key= key :sdl-key-less)
-         (when (< *config-timestep* most-positive-single-float)
-           (setf *config-timestep* (* *config-timestep* *config-timestep-delta*))))
-       (when (sdl:key= key :sdl-key-greater)
-         (when (> *config-timestep* 0.0)
-           (setf *config-timestep* (/ *config-timestep* *config-timestep-delta*))))
-       ; TODO mouse input
-       )
-      ;; if no input
-      (:idle ()
-       ;; todo
-       ;; update game at end
-       (game-step g)
-       (sdl:update-display))
-      )))
+  (print "game-run start")
+  ; (sdl:update-display)
+  (sdl:with-events (:poll)
+     (:quit-event () t)
+     (:video-expose-event () (sdl:update-display))
+     ;; process keyboard input
+     ;; make living cell with [MouseLeftClick]
+     (:key-down-event (:key key)
+      ;; close window with [RedX] or [ESC]
+      (when (sdl:key= key :sdl-key-escape)
+        (sdl:push-quit-event))
+      ;; move view area with [W A S D] or [MouseDrag]
+      (when (or (sdl:key= key :sdl-key-a) (sdl:key= key :sdl-key-left))
+        (incf (game-vx g) *config-view-delta*))
+      (when (or (sdl:key= key :sdl-key-d) (sdl:key= key :sdl-key-right))
+        (decf (game-vx g) *config-view-delta*))
+      (when (or (sdl:key= key :sdl-key-w) (sdl:key= key :sdl-key-up))
+        (decf (game-vy g) *config-view-delta*))
+      (when (or (sdl:key= key :sdl-key-s) (sdl:key= key :sdl-key-down))
+        (incf (game-vy g) *config-view-delta*))
+      ;; zoom view area with [+ -] or [MouseWheel]
+      (when (sdl:key= key :sdl-key-minus)
+        (when (> *config-view-size* 2) ;; minimum of 2x2
+          (decf *config-view-size* 1)
+          (update-view-size)))
+      (when (sdl:key= key :sdl-key-plus)
+        (when (< *config-view-size* (+ *config-window-x* 1)) ;; TODO: square window only?
+          (incf *config-view-size* 1)
+          (update-view-size)))
+      (when (sdl:key= key :sdl-key-equals)
+        (setf *config-view-size* 16)
+        (update-view-size))
+      ;; reset game state and pause with [R]
+      (when (sdl:key= key :sdl-key-r)
+        (game-reset g)
+        (setf (game-paused g) t))
+      ;; toggle pause sim with [P]
+      (when (sdl:key= key :sdl-key-p)
+        (game-toggle-paused g))
+      ;; adjust timestep with [< >] or [MouseWheel+SHIFT]
+      (when (sdl:key= key :sdl-key-less)
+        (when (< *config-timestep* most-positive-single-float)
+          (setf *config-timestep* (* *config-timestep* *config-timestep-delta*))))
+      (when (sdl:key= key :sdl-key-greater)
+        (when (> *config-timestep* 0.0)
+          (setf *config-timestep* (/ *config-timestep* *config-timestep-delta*))))
+      ; TODO mouse input
+      )
+     ;; if no input
+     (:idle ()
+      ;; todo
+      ;; update game at end
+      (sdl:clear-display sdl:*black* (game-window g))
+      (game-step g (game-state g))
+      (sdl:update-display))
+     )
+  )
 
 (defun main ()
+  (print "start of main")
   (if (/= (length *posix-argv*) 3)
-	  (print "usage: sbcl --script game-of-life.lisp width height")
-	  (let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
-			(height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
-		(if (not (and width height))
+	  (print "usage: gol.sh width height")
+      (let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
+            (height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
+        (if (not (and width height))
 			(print "Invalid parameters")
-			(let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
-			  (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
-			  (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
-			  (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
-			  (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
-			  (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
-
+            (let ((g (make-instance 'game))
+                  ; (generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell)))
+                  )
+              (game-setup g width height)
+              (game-run g)
+              (game-teardown g)
+			  ; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
+			  ; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
+			  ; (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
+			  ; (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
+			  ; (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 11 10 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 10 11 width height) 1)
 			  ;; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
-
-			  (print generation)
-
-			  (print-gen generation)
-
-			  (graphics-init generation))))))
+              ; (print generation)
+			  ; (print-gen generation)
+			  ; (graphics-init generation)
+              )
+            )
+        )
+      )
+  )
 
 (sb-int:with-float-traps-masked (:invalid :inexact :overflow)
-                                (main))
+  (main))
 ;; (setf (aref generation 4) 1)
 ;; (print generation)
 ;; (print (count-neighbors generation 5 0 width height))
