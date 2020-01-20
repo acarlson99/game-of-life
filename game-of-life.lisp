@@ -44,7 +44,11 @@
   (+ (check-cell arr (+ x 1) y width height)
 	 (check-cell arr (- x 1) y width height)
 	 (check-cell arr x (+ y 1) width height)
-	 (check-cell arr x (- y 1) width height)))
+	 (check-cell arr x (- y 1) width height)
+	 (check-cell arr (+ x 1) (+ y 1) width height)
+	 (check-cell arr (- x 1) (+ y 1) width height)
+	 (check-cell arr (+ x 1) (- y 1) width height)
+	 (check-cell arr (- x 1) (- y 1) width height)))
 
 (defun gen-val (arr x y width height)
   (let ((neighbors (count-neighbors arr x y width height))
@@ -58,11 +62,11 @@
 		   (3 alive-cell)
 		   (otherwise dead-cell)))
 	  (otherwise -1))))
-	;; (if (and (/= val alive-cell) (= neighbors 3))
-	;; 	alive-cell
-	;; 	(if (and (= val alive-cell) (or (= neighbors 3) (= neighbors 2)))
-	;; 		alive-cell
-	;; 		dead-cell))))
+;; (if (and (/= val alive-cell) (= neighbors 3))
+;; 	alive-cell
+;; 	(if (and (= val alive-cell) (or (= neighbors 3) (= neighbors 2)))
+;; 		alive-cell
+;; 		dead-cell))))
 
 (defun next-gen (arr width height)
   (let ((new-arr (make-array (* width height) :initial-element dead-cell)))
@@ -94,27 +98,27 @@
 (defun main ()
   (if (/= (length *posix-argv*) 3)
 	  (print "usage: sbcl --script game-of-life.lisp width height")
-		(let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
-			  (height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
-		  (if (not (and width height))
-			  (print "Invalid parameters")
-			  (let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
-				  (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
-				  (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
-				  (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
-				  (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
-				  (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
+	  (let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
+			(height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
+		(if (not (and width height))
+			(print "Invalid parameters")
+			(let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
+			  (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
+			  (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
+			  (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
+			  (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
+			  (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 
-				  ;; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
-				  ;; (setf (arr-idx (gen-arr generation) 11 10 width height) 1)
-				  ;; (setf (arr-idx (gen-arr generation) 10 11 width height) 1)
-				  ;; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
+			  ;; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
+			  ;; (setf (arr-idx (gen-arr generation) 11 10 width height) 1)
+			  ;; (setf (arr-idx (gen-arr generation) 10 11 width height) 1)
+			  ;; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
 
-				  (print generation)
+			  (print generation)
 
-				  (print-gen generation)
+			  (print-gen generation)
 
-				  (graphics-init generation))))))
+			  (graphics-init generation))))))
 
 (main)
 
