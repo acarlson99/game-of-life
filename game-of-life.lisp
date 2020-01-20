@@ -183,7 +183,7 @@
 
 (defmethod game-run ((g game))
   "Game-Of-Life docstring."
-  (print "game-run start")
+  (format t "game-run start~%")
   ; (sdl:update-display)
   (sdl:with-events (:poll)
      (:quit-event () t)
@@ -226,7 +226,11 @@
           (setf *config-timestep* (/ *config-timestep* *config-timestep-delta*))))
       )
      (:mouse-button-down-event (:button button :x x :y y)
-      (mouse-handler g button x y))
+      (format t "mouse button(~a) x(~a) y(~a)~%" button x y)
+      (when (sdl:mouse-left-p)
+        (mouse-handler g button x y))
+      ;(mouse-handler g button x y)
+      )
      ;; TODO mouse input
      ;; if no input
      (:idle ()
@@ -251,20 +255,38 @@
   )
 
 (defmethod game-get-cell ((g game) x y)
-  (arr-idx* (game-state g) x y (game-width g) (game-height g)))
+  (arr-idx*  (gen-arr (game-state g)) x y (game-width g) (game-height g)))
+
+(defmethod game-toggle-cell ((g game) x y)
+  (if (eql (game-get-cell g x y) dead-cell)
+      (game-set-cell g x y alive-cell)
+      (game-set-cell g x y dead-cell))
+  )
 
 (defun scale-xy (x)
   (* x *cell-size*))
 
 (defun mouse-handler (g button x y)
-  (let* ((y (- *config-window-y* y 1))
-         (x (truncate (/ (- (- x *config-view-size*) (/ *config-window-x* 2)) *config-view-size*)))
-         (y (truncate (/ (- (- y *config-view-size*) (/ *config-window-y* 2)) *config-view-size*))))
-    (cond ((eql button 0)
-           ;(sdl:button= button :sdl-button-left)
+  (let* ((x (truncate (/ x *cell-size*)))
+         (y (truncate (/ y *cell-size*))))
+    (format t "mouse-handler x(~s) y(~s)~%" x y)
+    (format t "get-cell ~s~%" (game-get-cell g x y))
+    (cond ((eql button 1)
            ; TODO set cell to living
-           (game-set-cell g x y (not (game-get-cell g x y))))
-          )))
+           (game-toggle-cell g x y)
+           ; (if (eql (game-get-cell g x y) dead-cell)
+           ;     (game-set-cell g x y alive-cell)
+           ;     (game-set-cell g x y dead-cell))
+           ; (game-set-cell g x y (not (game-get-cell g x y)))
+           )
+          )
+    ; (format t "get-cell ~s test~%" (game-get-cell g 0 0))
+    ; (game-set-cell g 0 0 1)
+    ; (game-toggle-cell g 0 0)
+    ; (format t "get-cell ~s test~%" (game-get-cell g 0 0))
+    (format t "get-cell ~s~%" (game-get-cell g x y))
+    ; (game-set-cell g 1 1 (not (game-get-cell g 1 1))) 
+    ))
 
 (defun main ()
   (print "start of main")
