@@ -37,7 +37,6 @@
   (if (or (< x 0) (< y 0) (>= x width) (>= y height))
 	  0
 	  (if (= (aref arr (+ (* width y) x)) alive-cell)
-		  ;; (if (/= (aref arr (+ (* width y) x)) 0)
 		  1
 		  0)))
 
@@ -50,18 +49,26 @@
 (defun gen-val (arr x y width height)
   (let ((neighbors (count-neighbors arr x y width height))
 		(val (arr-idx arr x y width height)))
-	(if (and (/= val alive-cell) (= neighbors 3))
-		alive-cell
-		(if (and (= val alive-cell) (or (= neighbors 3) (= neighbors 2)))
-			alive-cell
-			dead-cell))))
+	(case val
+	  (0 (if (= neighbors 3)
+			 alive-cell
+			 dead-cell))
+	  (1 (case neighbors
+		   (2 alive-cell)
+		   (3 alive-cell)
+		   (otherwise dead-cell)))
+	  (otherwise -1))))
+	;; (if (and (/= val alive-cell) (= neighbors 3))
+	;; 	alive-cell
+	;; 	(if (and (= val alive-cell) (or (= neighbors 3) (= neighbors 2)))
+	;; 		alive-cell
+	;; 		dead-cell))))
 
 (defun next-gen (arr width height)
   (let ((new-arr (make-array (* width height) :initial-element dead-cell)))
 	(loop for y from 0 to (- height 1)
 	   do (loop for x from 0 to (- width 1)
 			 do (setf (arr-idx new-arr x y width height) (gen-val arr x y width height))))
-	;; do (setf (aref new-arr (+ (* width y) x)) (count-neighbors arr x y width height))))
 	new-arr))
 
 (defun print-gen (generation)
@@ -87,24 +94,27 @@
 (defun main ()
   (if (/= (length *posix-argv*) 3)
 	  (print "usage: sbcl --script game-of-life.lisp width height")
-	  (progn
 		(let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
 			  (height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
 		  (if (not (and width height))
 			  (print "Invalid parameters")
 			  (let ((generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell))))
-				(progn
 				  (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
 				  (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
 				  (setf (arr-idx (gen-arr generation) 9 12 width height) 1)
 				  (setf (arr-idx (gen-arr generation) 10 12 width height) 1)
 				  (setf (arr-idx (gen-arr generation) 11 12 width height) 1)
 
+				  ;; (setf (arr-idx (gen-arr generation) 10 10 width height) 1)
+				  ;; (setf (arr-idx (gen-arr generation) 11 10 width height) 1)
+				  ;; (setf (arr-idx (gen-arr generation) 10 11 width height) 1)
+				  ;; (setf (arr-idx (gen-arr generation) 11 11 width height) 1)
+
 				  (print generation)
 
 				  (print-gen generation)
 
-				  (graphics-init generation))))))))
+				  (graphics-init generation))))))
 
 (main)
 
