@@ -156,6 +156,8 @@
 (defmethod game-draw ((g game))
   ;; (print-gen (game-state g))
   (sdl:clear-display sdl:*green*)
+  ;; (loop for y from (game-vy g) to (- height 1)
+  ;; 	 do (loop for x from (game-vx g) to (- width 1)
   (loop for y from 0 to (- height 1)
 	 do (loop for x from 0 to (- width 1)
 		   do (let ((state (game-state g)))
@@ -219,13 +221,22 @@
       )
      ;; if no input
      (:idle ()
-      ;; todo
+      ;; (if (< 0 (game-vx g))
+	  ;; 	  (setf (game-vx g) 0))
+	  ;; (if (< 0 (game-vy g))
+	  ;; 	  (setf (game-vy g) 0))
+	  ;; (if (>= (gen-width (game-state g)) (game-vx g))
+	  ;; 	  (setf (game-vx g) (gen-width (game-state g))))
+	  ;; (if (>= (gen-height (game-state g)) (game-vy g))
+	  ;; 	  (setf (game-vy g) (gen-height (game-state g))))
+	  ;; todo
 	  ;; (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
 	  ;; 				:color sdl:*green*)))))
 	  (game-draw g)
 	  ;; update game at end
 	  ;; (sleep .5)
-	  (game-step g (game-state g))
+	  (if (not (game-paused g))
+		  (game-step g (game-state g)))
 	  ;; (sdl:draw-box (sdl:rectangle :x 0 :y 10 :w 200 :h 10)
 	  ;; 			  :color (sdl:color))
 	  ;; (print-gen (game-state g))
