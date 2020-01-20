@@ -219,30 +219,30 @@
       (when (sdl:key= key :sdl-key-greater)
         (when (> *config-timestep* 0.0)
           (setf *config-timestep* (/ *config-timestep* *config-timestep-delta*))))
-      ; TODO mouse input
+      ;; TODO mouse input
       )
      ;; if no input
      (:idle ()
       ;; todo
-			(loop for y from 0 to (- height 1)
-			   do (loop for x from 0 to (- width 1)
-					 do (let ((state (game-state g)))
-						  (if (= (arr-idx* (gen-arr state) x y (gen-width state) (gen-height state)) alive-cell)
-							  (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
-											:color sdl:*black*)
-							  (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
-											:color sdl:*green*)))))
-			
-      ;; update game at end
-      ; (sdl:clear-display sdl:*green*)
-      ; (sleep .5)
-      (game-step g (game-state g))
-      ;; (sdl:draw-box (sdl:rectangle :x 0 :y 10 :w 200 :h 10)
+      (sdl:clear-display sdl:*green*)
+	  (loop for y from 0 to (- height 1)
+		 do (loop for x from 0 to (- width 1)
+			   do (let ((state (game-state g)))
+					(if (= (arr-idx* (gen-arr state) x y (gen-width state) (gen-height state)) alive-cell)
+						(sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
+									  :color sdl:*black*)))))
+	  ;; (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
+	  ;; 				:color sdl:*green*)))))
+
+	  ;; update game at end
+	  ;; (sleep .5)
+	  (game-step g (game-state g))
+	  ;; (sdl:draw-box (sdl:rectangle :x 0 :y 10 :w 200 :h 10)
 	  ;; 			  :color (sdl:color))
-	  (print-gen (game-state g))
-      (sdl:update-display)
-      )
-     )
+	  ;; (print-gen (game-state g))
+	  (sdl:update-display)
+	  )
+	 )
   )
 
 (defun scale-xy (x)
