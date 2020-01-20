@@ -85,11 +85,12 @@
 ;; 		alive-cell
 ;; 		dead-cell))))
 
-(defun next-gen (arr width height)
+(defun next-gen (arr width height &optional clear)
   (let ((new-arr (make-array (* width height) :initial-element dead-cell)))
-	(loop for y from 0 to (- height 1)
-	   do (loop for x from 0 to (- width 1)
-			 do (setf (arr-idx new-arr x y width height) (gen-val arr x y width height))))
+	(if (not clear)
+		(loop for y from 0 to (- height 1)
+		   do (loop for x from 0 to (- width 1)
+				 do (setf (arr-idx new-arr x y width height) (gen-val arr x y width height)))))
 	new-arr))
 
 (defun print-gen (generation)
@@ -143,11 +144,12 @@
 (defparameter height nil)
 ; (defparameter generation nil)
 
-(defmethod game-step ((g game) generation)
+(defmethod game-step ((g game) generation &optional clear)
   (setf (gen-arr generation)
         (next-gen (gen-arr generation)
                   (gen-width generation)
-                  (gen-height generation)))
+                  (gen-height generation)
+				  clear))
   ;TODO
   )
 
@@ -162,13 +164,12 @@
 					(sdl:draw-box (sdl:rectangle
 								   :x (scale-xy x) :y (scale-xy y)
 								   :w *cell-size* :h *cell-size*)
-								  :color sdl:*black*)))))
-  ; TODO
-  )
+								  :color sdl:*black*))))))
 
 ;; set all cells of game-state to deat-cell
 (defmethod game-reset ((g game))
   ; TODO
+  (game-step g (game-state g) t)
   )
 
 (defmethod game-run ((g game))
