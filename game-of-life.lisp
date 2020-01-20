@@ -130,14 +130,14 @@
 (defmethod game-toggle-paused ((g game))
   (setf (game-paused g) (not (game-paused g))))
 
-(defun graphics-init (generation)
-  (loop for i from 0 to 100
-	 do (progn
-		  (setf (gen-arr generation)
-				(next-gen (gen-arr generation)
-						  (gen-width generation)
-						  (gen-height generation)))
-		  (print-gen generation))))
+;; (defun graphics-init (generation)
+;;   (loop for i from 0 to 100
+;; 	 do (progn
+;; 		  (setf (gen-arr generation)
+;; 				(next-gen (gen-arr generation)
+;; 						  (gen-width generation)
+;; 						  (gen-height generation)))
+;; 		  (print-gen generation))))
 
 (defparameter width nil)
 (defparameter height nil)
@@ -152,7 +152,17 @@
   )
 
 (defmethod game-draw ((g game))
-  (print-gen (game-state g))
+  ;; (print-gen (game-state g))
+  (sdl:clear-display sdl:*green*)
+  (loop for y from 0 to (- height 1)
+	 do (loop for x from 0 to (- width 1)
+		   do (let ((state (game-state g)))
+				(if (= (arr-idx* (gen-arr state) x y (gen-width state)
+								 (gen-height state)) alive-cell)
+					(sdl:draw-box (sdl:rectangle
+								   :x (scale-xy x) :y (scale-xy y)
+								   :w *cell-size* :h *cell-size*)
+								  :color sdl:*black*)))))
   ; TODO
   )
 
@@ -185,7 +195,7 @@
         (incf (game-vy g) *config-view-delta*))
       ;; zoom view area with [+ -] or [MouseWheel]
       (when (sdl:key= key :sdl-key-minus)
-        (when (> *cell-size* 2) ;; minimum of 2x2
+        (when (> *cell-size* 1) ;; minimum of 2x2
           (decf *cell-size* 1)))
       (when (sdl:key= key :sdl-key-equals)
         (when (< *cell-size* (+ *config-window-x* 1)) ;; TODO: square window only?
@@ -209,16 +219,9 @@
      ;; if no input
      (:idle ()
       ;; todo
-      (sdl:clear-display sdl:*green*)
-	  (loop for y from 0 to (- height 1)
-		 do (loop for x from 0 to (- width 1)
-			   do (let ((state (game-state g)))
-					(if (= (arr-idx* (gen-arr state) x y (gen-width state) (gen-height state)) alive-cell)
-						(sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
-									  :color sdl:*black*)))))
 	  ;; (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
 	  ;; 				:color sdl:*green*)))))
-
+	  (game-draw g)
 	  ;; update game at end
 	  ;; (sleep .5)
 	  (game-step g (game-state g))
@@ -239,7 +242,7 @@
 	  (print "usage: gol.sh width height")
       (let ((width (parse-integer (cadr *posix-argv*) :junk-allowed t))
             (height (parse-integer (caddr *posix-argv*) :junk-allowed t)))
-        (if (not (and width height))
+        (if (or (not (and width height)) (< height 0) (< width 0) (> height 1000) (> width 1000))
 			(print "Invalid parameters")
             (let ((g (make-instance 'game))
                   ; (generation (make-gen :width width :height height :arr (make-array (* width height) :initial-element dead-cell)))
