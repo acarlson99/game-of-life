@@ -4,7 +4,6 @@
 
 (ql:quickload 'lispbuilder-sdl)
 ;; (ql:quickload 'lispbuilder-sdl-gfx)
-(ql:quickload 'unix-opts)
 
 (defparameter *width* 200)
 (defparameter *height* 200)
