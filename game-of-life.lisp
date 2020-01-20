@@ -8,7 +8,7 @@
 (defparameter *width* 200)
 (defparameter *height* 200)
 
-(defparameter *config-view-delta* 2)
+(defparameter *config-view-delta* 1)
 (defparameter *config-timestep* 1.0)
 (defparameter *config-timestep-delta* 2)
 
@@ -160,17 +160,18 @@
   )
 
 (defmethod game-draw ((g game))
-  ;; (print-gen (game-state g))
+  ;; (print (game-vx g))
+  ;; (print (game-vy g))
   (sdl:clear-display sdl:*green*)
-  ;; (loop for y from (game-vy g) to (- height 1)
-  ;; 	 do (loop for x from (game-vx g) to (- width 1)
-  (loop for y from 0 to (- height 1)
-	 do (loop for x from 0 to (- width 1)
-		   do (let ((state (game-state g)))
+  (loop for y from (game-vy g) to (- height 1)
+	 do (loop for x from (game-vx g) to (- width 1)
+		   do (let ((state (game-state g))
+					(y* (- y (game-vy g)))
+					(x* (- x (game-vx g))))
 				(if (= (arr-idx* (gen-arr state) x y (gen-width state)
 								 (gen-height state)) alive-cell)
 					(sdl:draw-box (sdl:rectangle
-								   :x (scale-xy x) :y (scale-xy y)
+								   :x (scale-xy x*) :y (scale-xy y*)
 								   :w *cell-size* :h *cell-size*)
 								  :color sdl:*black*))))))
 
@@ -195,13 +196,13 @@
         (sdl:push-quit-event))
       ;; move view area with [W A S D] or [MouseDrag]
       (when (or (sdl:key= key :sdl-key-a) (sdl:key= key :sdl-key-left))
-        (incf (game-vx g) *config-view-delta*))
+        (if (> (game-vx g) 0) (decf (game-vx g) *config-view-delta*)))
       (when (or (sdl:key= key :sdl-key-d) (sdl:key= key :sdl-key-right))
-        (decf (game-vx g) *config-view-delta*))
+        (if (<= (game-vx g) (game-width g)) (incf (game-vx g) *config-view-delta*)))
       (when (or (sdl:key= key :sdl-key-w) (sdl:key= key :sdl-key-up))
-        (decf (game-vy g) *config-view-delta*))
+        (if (> (game-vy g) 0) (decf (game-vy g) *config-view-delta*)))
       (when (or (sdl:key= key :sdl-key-s) (sdl:key= key :sdl-key-down))
-        (incf (game-vy g) *config-view-delta*))
+        (if (<= (game-vy g) (game-height g)) (incf (game-vy g) *config-view-delta*)))
       ;; zoom view area with [+ -] or [MouseWheel]
       (when (sdl:key= key :sdl-key-minus)
         (when (> *cell-size* 1) ;; minimum of 2x2
@@ -229,14 +230,6 @@
      ;; TODO mouse input
      ;; if no input
      (:idle ()
-      ;; (if (< 0 (game-vx g))
-	  ;; 	  (setf (game-vx g) 0))
-	  ;; (if (< 0 (game-vy g))
-	  ;; 	  (setf (game-vy g) 0))
-	  ;; (if (>= (gen-width (game-state g)) (game-vx g))
-	  ;; 	  (setf (game-vx g) (gen-width (game-state g))))
-	  ;; (if (>= (gen-height (game-state g)) (game-vy g))
-	  ;; 	  (setf (game-vy g) (gen-height (game-state g))))
 	  ;; todo
 	  ;; (sdl:draw-box (sdl:rectangle :x (scale-xy x) :y (scale-xy y) :w *cell-size* :h *cell-size*)
 	  ;; 				:color sdl:*green*)))))
